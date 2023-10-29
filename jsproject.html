@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>js project</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        
+        form {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        label {
+            min-width: 100px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100px;
+            margin: 5px 10px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>store</h1>
+
+    <form id="itemForm">
+        <label for="candyName">Candy Name:</label>
+        <input type="text" id="candyName" name="candyName">
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description">
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price">
+
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity">
+
+        <input type="button" value="Add Item" onclick="createItem()">
+    </form>
+
+    <h2>Items</h2>
+    <div id="itemList"></div>
+
+    <script>
+        function createItem() {
+            var newItem = {
+                candyName: document.getElementById("candyName").value,
+                description: document.getElementById("description").value,
+                price: parseFloat(document.getElementById("price").value).toFixed(2),
+                quantity: parseInt(document.getElementById("quantity").value)
+            };
+
+            axios.post("https://crudcrud.com/api/deee3b02edaf4c8790a13e214009a41c/appdata", newItem)
+                .then((response) => {
+                    console.log("Item created successfully:", response.data);
+                    readItems();
+                })
+                .catch((error) => {
+                    console.error("Error creating item:", error);
+                });
+        }
+
+        function readItems() {
+            axios.get("https://crudcrud.com/api/deee3b02edaf4c8790a13e214009a41c/appdata")
+                .then((response) => {
+                    var items = response.data;
+                    console.log("Items retrieved successfully:", items);
+                    displayItems(items);
+                })
+                .catch((error) => {
+                    console.error("Error retrieving items:", error);
+                });
+        }
+
+        function displayItems(items) {
+            var itemList = document.getElementById("itemList");
+            itemList.innerHTML = '';
+
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var itemContainer = document.createElement("div");
+                var quantity = item.quantity;
+                itemContainer.innerHTML = `Candy Name: ${item.candyName}   Description: ${item.description}   Price: $${item.price}   Quantity: ${quantity}`;
+
+                for (var j = 1; j <= 3; j++) {
+                    var buyButton = document.createElement("button");
+                    buyButton.innerText = `Buy-${j}`;
+                    buyButton.addEventListener("click", function() {
+                        var buyQuantity = parseInt(this.innerText.replace("Buy-", ""));
+                        
+                        if (quantity >= buyQuantity) {
+                            quantity -= buyQuantity;
+                            updateQuantity(item._id, quantity);
+                        } else {
+                            alert("Not enough quantity available.");
+                        }
+                    });
+                    itemContainer.appendChild(buyButton);
+                }
+
+                itemList.appendChild(itemContainer);
+            }
+        }
+
+        function updateQuantity(itemID, newQuantity) {
+            axios.put(`https://crudcrud.com/api/deee3b02edaf4c8790a13e214009a41c/appdata/${itemID}`, {
+                quantity: newQuantity
+            })
+            .then((response) => {
+                console.log("Item updated successfully:", response.data);
+                readItems();
+            })
+            .catch((error) => {
+                console.error("Error updating item:", error);
+            });
+        }
+
+        readItems();
+    </script>
+</body>
+</html>
